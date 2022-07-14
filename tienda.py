@@ -38,14 +38,6 @@ def crearTabla(dbBaseDatos):
     con.commit()
     con.close()
 
-def crearRegistro(dbBaseDatos):
-    # Crear registro en la tabla productos
-    con = sqlite3.connect(dbBaseDatos)
-    cur = con.cursor()
-    cur.execute("INSERT INTO productos VALUES ('PROD-BASE', 'PRODUCTO BASE', 100, 1)")
-    con.commit()
-    con.close()
-
 def leerRegistros(dbBaseDatos):
     # Leer registros de la tabla productos
     con = sqlite3.connect(dbBaseDatos)
@@ -64,12 +56,9 @@ if __name__ == "__main__":
     fileConfig.close()        
     crearBD(dbBaseDatos)
     crearTabla(dbBaseDatos)
-    #crearRegistro(dbBaseDatos)
     leerRegistros(dbBaseDatos)
 
-"""
 
-"""
 
    
 
