@@ -1,0 +1,4 @@
+# Archivo de configuracion para la aplicacion tienda.py
+
+basedatos: 
+  path: "datos\\tienda.db"
