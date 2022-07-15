@@ -18,12 +18,14 @@ parser.add_argument("-c", "--config", type=str, default='tienda.yaml', required=
 parser.add_argument("-k", "--key", type=str, default='KEY', required=False, help="API KEY para consumo de almacen")
 """
 
+#Captura de parametros en variables
 args = parser.parse_args()
 servidor = args.servidor
 puerto = args.puerto
 arcConfiguracion = args.config
 apiKEY = args.key
 
+#Lectura de configuraciones del archivo yaml
 with open(args.config, 'r') as fileConfig:
     try:
         dicConfig = yaml.safe_load(fileConfig)
@@ -34,13 +36,13 @@ fileConfig.close()
 
 app = Flask(__name__)
 
-def crearBD(dbBaseDatos):
+def crearBD():
     # Crear Base de Datos tienda.db    
     con = sqlite3.connect(dbBaseDatos)
     con.commit()
     con.close()
 
-def crearTabla(dbBaseDatos):
+def crearTabla():
     # Crear tabla productos
     con = sqlite3.connect(dbBaseDatos)
     cur = con.cursor()
@@ -53,14 +55,6 @@ def crearTabla(dbBaseDatos):
         print("La tabla productos ya existe")    
     con.commit()
     con.close()
-
-def leerRegistros(dbBaseDatos):
-    # Leer registros de la tabla productos
-    con = sqlite3.connect(dbBaseDatos)
-    cur = con.cursor()
-    for row in cur.execute('SELECT * FROM productos'):
-        print(row)
-    con.close()        
 
 class create_dict(dict): 
     # __init__ function 
@@ -89,10 +83,9 @@ def leerProductos():
 if __name__ == "__main__":
        
     print(args)
-    crearBD(dbBaseDatos)
-    crearTabla(dbBaseDatos)
-    leerRegistros(dbBaseDatos)
-    app.run(debug=True, port=args.puerto)
+    crearBD()
+    crearTabla()
+    app.run(debug=True, host=servidor, port=puerto)
 
 
    
