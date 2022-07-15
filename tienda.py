@@ -1,3 +1,5 @@
+from flask import Flask, jsonify
+import json
 import yaml
 import argparse
 import sqlite3
@@ -17,6 +19,20 @@ parser.add_argument("-k", "--key", type=str, default='KEY', required=False, help
 """
 
 args = parser.parse_args()
+servidor = args.servidor
+puerto = args.puerto
+arcConfiguracion = args.config
+apiKEY = args.key
+
+with open(args.config, 'r') as fileConfig:
+    try:
+        dicConfig = yaml.safe_load(fileConfig)
+        dbBaseDatos = dicConfig["basedatos"]["path"]
+    except yaml.YAMLError as exc:
+        print(exc)
+fileConfig.close() 
+
+app = Flask(__name__)
 
 def crearBD(dbBaseDatos):
     # Crear Base de Datos tienda.db    
@@ -46,18 +62,37 @@ def leerRegistros(dbBaseDatos):
         print(row)
     con.close()        
 
+class create_dict(dict): 
+    # __init__ function 
+    def __init__(self): 
+        self = dict() 
+    # Function to add key:value 
+    def add(self, key, value): 
+        self[key] = value
+
+
+
+@app.route('/productos', methods=['GET'])
+def leerProductos():
+    mydict = create_dict()
+    con = sqlite3.connect(dbBaseDatos)
+    cur = con.cursor()
+    for row in cur.execute('SELECT * FROM productos'):
+        mydict.add(row[0],({"descripcion":row[1],"cantidad":row[2],"precio":row[3]}))
+        print(row)
+    con.close() 
+    lista_productos = json.dumps(mydict, indent=2, sort_keys=True)
+    print(lista_productos)
+    return lista_productos
+
+
 if __name__ == "__main__":
-    with open(args.config, 'r') as fileConfig:
-        try:
-            dicConfig = yaml.safe_load(fileConfig)
-            dbBaseDatos = dicConfig["basedatos"]["path"]
-        except yaml.YAMLError as exc:
-            print(exc)
-    fileConfig.close()        
+       
+    print(args)
     crearBD(dbBaseDatos)
     crearTabla(dbBaseDatos)
     leerRegistros(dbBaseDatos)
-
+    app.run(debug=True, port=args.puerto)
 
 
    
