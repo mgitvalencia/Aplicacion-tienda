@@ -71,13 +71,11 @@ def leerProductos():
     mydict = create_dict()
     con = sqlite3.connect(dbBaseDatos)
     cur = con.cursor()
-    for row in cur.execute('SELECT * FROM productos'):
-        mydict.add(row[0],({"descripcion":row[1],"cantidad":row[2],"precio":row[3]}))
-        print(row)
+    cur.execute('SELECT * FROM productos')
+    resultado = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
+    print(json.dumps(resultado, indent=2, sort_keys=True))
     con.close() 
-    lista_productos = json.dumps(mydict, indent=2, sort_keys=True)
-    print(lista_productos)
-    return lista_productos
+    return jsonify(resultado)
 
 
 if __name__ == "__main__":
