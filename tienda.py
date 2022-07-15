@@ -56,19 +56,8 @@ def crearTabla():
     con.commit()
     con.close()
 
-class create_dict(dict): 
-    # __init__ function 
-    def __init__(self): 
-        self = dict() 
-    # Function to add key:value 
-    def add(self, key, value): 
-        self[key] = value
-
-
-
 @app.route('/productos', methods=['GET'])
 def leerProductos():
-    mydict = create_dict()
     con = sqlite3.connect(dbBaseDatos)
     cur = con.cursor()
     cur.execute('SELECT * FROM productos')
