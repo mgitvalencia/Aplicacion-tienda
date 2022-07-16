@@ -10,13 +10,13 @@ parser.add_argument("-p", "--puerto", type=str, default='5000', required=False ,
 parser.add_argument("-c", "--config", type=str, required=True, help="Nombre y ruta del archivo de configuracion")
 parser.add_argument("-k", "--key", type=str, required=True, help="API KEY para consumo de almacen")
 
-"""para debugg"""
+"""para debugg
 parser = argparse.ArgumentParser(description="Aplicacion tienda para el Master Full Stack")
 parser.add_argument("-s", "--servidor", type=str, default="localhost", required=False, help="Nombre o IP del servidor")
 parser.add_argument("-p", "--puerto", type=str, default='5000', required=False , help="Puerto para el servicio API")
 parser.add_argument("-c", "--config", type=str, default='tienda.yaml', required=False, help="Nombre y ruta del archivo de configuracion")
 parser.add_argument("-k", "--key", type=str, default='KEY', required=False, help="API KEY para consumo de almacen")
-
+"""
 
 #Captura de parametros en variables
 args = parser.parse_args()
