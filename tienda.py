@@ -164,6 +164,32 @@ def eliminarProducto():
         return jsonify({"Mensaje": "El producto NO existe", "Codigo de Producto": codigo}) 
 
 
+@app.route('/vender', methods=['POST'])
+def evenderProducto():
+    con = sqlite3.connect(dbBaseDatos)
+    cur = con.cursor()
+
+    usuario = request.headers.environ['HTTP_USUARIO']       
+    clave = request.headers.environ['HTTP_CLAVE']       
+    validacion = validaUsuario(usuario, clave)
+    if (validacion.json['error']):
+       return jsonify(validacion.json)
+
+    codigo = request.json['codigo']
+    cantPedida = request.json['cantidad']
+    resultado = cur.execute('SELECT * FROM productos WHERE codigo = ?', (codigo,))
+    if (len(resultado.fetchall()) != 0):
+        if (resultado.fetchall[0]["cantidad"] >= cantPedida ):
+            cur.execute("UPDATE productos set cantidad = ? WHERE codigo = ?", (resultado.fetchall[0]["cantidad"]-cantPedida, codigo))   
+            con.commit()
+            con.close()
+            return jsonify({"Mensaje": "El producto fue actualizado con la cantidad vendida", "Codigo de Producto": codigo})
+        else:
+            return jsonify({"Mensaje": "El producto no tiene cantidad suficiente", "Codigo de Producto": codigo})   
+    else: 
+        return jsonify({"Mensaje": "El producto NO existe", "Codigo de Producto": codigo}) 
+
+
 if __name__ == "__main__":
     print(args)
     crearBD()
