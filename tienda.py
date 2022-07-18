@@ -178,9 +178,12 @@ def evenderProducto():
     codigo = request.json['codigo']
     cantPedida = request.json['cantidad']
     resultado = cur.execute('SELECT * FROM productos WHERE codigo = ?', (codigo,))
-    if (len(resultado.fetchall()) != 0):
-        if (resultado.fetchall[0]["cantidad"] >= cantPedida ):
-            cur.execute("UPDATE productos set cantidad = ? WHERE codigo = ?", (resultado.fetchall[0]["cantidad"]-cantPedida, codigo))   
+    row = resultado.fetchone()
+    if (row != None):       
+        cantInventario = row[2]
+        if (cantInventario >= cantPedida ):
+            cantInventario = cantInventario - cantPedida
+            cur.execute("UPDATE productos set cantidad = ? WHERE codigo = ?", (cantInventario, codigo))   
             con.commit()
             con.close()
             return jsonify({"Mensaje": "El producto fue actualizado con la cantidad vendida", "Codigo de Producto": codigo})
