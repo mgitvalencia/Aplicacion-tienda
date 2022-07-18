@@ -3,20 +3,23 @@ import json
 import yaml
 import argparse
 import sqlite3
+import requests
+
+requests.adapters.DEFAULT_RETRIES = 5
 
 parser = argparse.ArgumentParser(description="Aplicacion tienda para el Master Full Stack")
 parser.add_argument("-s", "--servidor", type=str, default="localhost", required=False, help="Nombre o IP del servidor")
-parser.add_argument("-p", "--puerto", type=str, default='5000', required=False , help="Puerto para el servicio API")
+parser.add_argument("-p", "--puerto", type=str, default='5001', required=False , help="Puerto para el servicio API")
 parser.add_argument("-c", "--config", type=str, required=True, help="Nombre y ruta del archivo de configuracion")
 parser.add_argument("-k", "--key", type=str, required=True, help="API KEY para consumo de almacen")
 
-"""para debugg
+"""para debugg"""
 parser = argparse.ArgumentParser(description="Aplicacion tienda para el Master Full Stack")
 parser.add_argument("-s", "--servidor", type=str, default="localhost", required=False, help="Nombre o IP del servidor")
-parser.add_argument("-p", "--puerto", type=str, default='5000', required=False , help="Puerto para el servicio API")
+parser.add_argument("-p", "--puerto", type=str, default='5001', required=False , help="Puerto para el servicio API")
 parser.add_argument("-c", "--config", type=str, default='tienda.yaml', required=False, help="Nombre y ruta del archivo de configuracion")
 parser.add_argument("-k", "--key", type=str, default='KEY', required=False, help="API KEY para consumo de almacen")
-"""
+
 
 #Captura de parametros en variables
 args = parser.parse_args()
@@ -30,6 +33,7 @@ with open(args.config, 'r') as fileConfig:
     try:
         dicConfig = yaml.safe_load(fileConfig)
         dbBaseDatos = dicConfig["basedatos"]["path"]
+        urlAlmacen = dicConfig["almacen"]["url"]
     except yaml.YAMLError as exc:
         print(exc)
 fileConfig.close() 
@@ -69,7 +73,6 @@ def validaUsuario(usuario, clave):
         else:
             return jsonify({"error": False, "mensaje": ""})   
     con.close() 
-
 
 @app.route('/productos', methods=['GET'])
 def leerProductos():
@@ -163,11 +166,23 @@ def eliminarProducto():
     else: 
         return jsonify({"Mensaje": "El producto NO existe", "Codigo de Producto": codigo}) 
 
+@app.teardown_request
+def leerProductosAlmacen():
+    print("llamar almacen")
+
+    #solicitud = requests.get("http://loclahost:5000/productos", verify=False)
+    #print(solicitud.text)
+
+    with app.test_client() as client:
+         client.get("http://loclahost:5000/productos")
+         print(request.path)
+
 
 if __name__ == "__main__":
     print(args)
     crearBD()
     crearTabla()
+    leerProductosAlmacen()
     app.run(debug=True, host=servidor, port=puerto)
 
 
