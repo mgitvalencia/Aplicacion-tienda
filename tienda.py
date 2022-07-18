@@ -66,7 +66,6 @@ def leerProductos():
     con.close() 
     return jsonify(resultado)
 
-
 if __name__ == "__main__":
        
     print(args)
