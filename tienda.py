@@ -3,23 +3,20 @@ import json
 import yaml
 import argparse
 import sqlite3
-import requests
-
-requests.adapters.DEFAULT_RETRIES = 5
 
 parser = argparse.ArgumentParser(description="Aplicacion tienda para el Master Full Stack")
 parser.add_argument("-s", "--servidor", type=str, default="localhost", required=False, help="Nombre o IP del servidor")
-parser.add_argument("-p", "--puerto", type=str, default='5001', required=False , help="Puerto para el servicio API")
+parser.add_argument("-p", "--puerto", type=str, default='5000', required=False , help="Puerto para el servicio API")
 parser.add_argument("-c", "--config", type=str, required=True, help="Nombre y ruta del archivo de configuracion")
 parser.add_argument("-k", "--key", type=str, required=True, help="API KEY para consumo de almacen")
 
-"""para debugg"""
+"""para debugg
 parser = argparse.ArgumentParser(description="Aplicacion tienda para el Master Full Stack")
 parser.add_argument("-s", "--servidor", type=str, default="localhost", required=False, help="Nombre o IP del servidor")
-parser.add_argument("-p", "--puerto", type=str, default='5001', required=False , help="Puerto para el servicio API")
+parser.add_argument("-p", "--puerto", type=str, default='5000', required=False , help="Puerto para el servicio API")
 parser.add_argument("-c", "--config", type=str, default='tienda.yaml', required=False, help="Nombre y ruta del archivo de configuracion")
 parser.add_argument("-k", "--key", type=str, default='KEY', required=False, help="API KEY para consumo de almacen")
-
+"""
 
 #Captura de parametros en variables
 args = parser.parse_args()
@@ -33,7 +30,6 @@ with open(args.config, 'r') as fileConfig:
     try:
         dicConfig = yaml.safe_load(fileConfig)
         dbBaseDatos = dicConfig["basedatos"]["path"]
-        urlAlmacen = dicConfig["almacen"]["url"]
     except yaml.YAMLError as exc:
         print(exc)
 fileConfig.close() 
@@ -74,6 +70,7 @@ def validaUsuario(usuario, clave):
             return jsonify({"error": False, "mensaje": ""})   
     con.close() 
 
+
 @app.route('/productos', methods=['GET'])
 def leerProductos():
     con = sqlite3.connect(dbBaseDatos)
@@ -91,14 +88,88 @@ def leerProductos():
     con.close() 
     return jsonify(resultado)
 
+@app.route('/productos', methods=['POST'])
+def crearProducto():
+    con = sqlite3.connect(dbBaseDatos)
+    cur = con.cursor()
+
+    usuario = request.headers.environ['HTTP_USUARIO']       
+    clave = request.headers.environ['HTTP_CLAVE']       
+    validacion = validaUsuario(usuario, clave)
+    if (validacion.json['error']):
+       return jsonify(validacion.json)
+
+    codigo = request.json['codigo']
+    descripcion = request.json['descripcion']
+    precio = request.json['precio']
+    cantidad = request.json['cantidad']
+    resultado = cur.execute('SELECT * FROM productos WHERE codigo = ?', (codigo,))
+    if (len(resultado.fetchall()) == 0):
+        cur.execute("INSERT INTO productos(codigo, descripcion, precio, cantidad) VALUES (?, ?, ?, ?)", (codigo, descripcion, precio, cantidad))   
+        con.commit()
+        cur.execute('SELECT * FROM productos WHERE codigo = ?', (codigo,))
+        resultado = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
+        con.commit()
+        con.close()
+        return jsonify(resultado)
+    else: 
+        return jsonify({"Mensaje": "El producto ya existe", "Codigo de Producto": codigo})       
+    
+@app.route('/productos', methods=['PUT'])
+def actualizarProducto():
+    con = sqlite3.connect(dbBaseDatos)
+    cur = con.cursor()
+
+    usuario = request.headers.environ['HTTP_USUARIO']       
+    clave = request.headers.environ['HTTP_CLAVE']       
+    validacion = validaUsuario(usuario, clave)
+    if (validacion.json['error']):
+       return jsonify(validacion.json)
+
+    codigo = request.json['codigo']
+    descripcion = request.json['descripcion']
+    precio = request.json['precio']
+    cantidad = request.json['cantidad']
+    resultado = cur.execute('SELECT * FROM productos WHERE codigo = ?', (codigo,))
+    if (len(resultado.fetchall()) != 0):
+        cur.execute("UPDATE productos set descripcion = ?, precio = ?, cantidad = ? WHERE codigo = ?", (descripcion, precio, cantidad, codigo))   
+        con.commit()
+        cur.execute('SELECT * FROM productos WHERE codigo = ?', (codigo,))
+        resultado = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
+        con.commit()
+        con.close()
+        return jsonify(resultado)
+    else: 
+        return jsonify({"Mensaje": "El producto NO existe", "Codigo de Producto": codigo})       
+
+@app.route('/productos', methods=['DELETE'])
+def eliminarProducto():
+    con = sqlite3.connect(dbBaseDatos)
+    cur = con.cursor()
+
+    usuario = request.headers.environ['HTTP_USUARIO']       
+    clave = request.headers.environ['HTTP_CLAVE']       
+    validacion = validaUsuario(usuario, clave)
+    if (validacion.json['error']):
+       return jsonify(validacion.json)
+
+    codigo = request.json['codigo']
+    resultado = cur.execute('SELECT * FROM productos WHERE codigo = ?', (codigo,))
+    if (len(resultado.fetchall()) != 0):
+        cur.execute("DELETE FROM productos WHERE codigo = ?", (codigo,))   
+        con.commit()
+        con.close()
+        return jsonify({"Mensaje": "El producto fue eliminado", "Codigo de Producto": codigo})
+    else: 
+        return jsonify({"Mensaje": "El producto NO existe", "Codigo de Producto": codigo}) 
+
+
 if __name__ == "__main__":
     print(args)
     crearBD()
     crearTabla()
-    leerProductosAlmacen()
     app.run(debug=True, host=servidor, port=puerto)
 
 
    
-
 
