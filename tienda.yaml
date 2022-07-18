@@ -2,3 +2,6 @@
 
 basedatos: 
   path: "datos\\tienda.db"
+almacen:
+  url: "localhost:5001/productos"
+
